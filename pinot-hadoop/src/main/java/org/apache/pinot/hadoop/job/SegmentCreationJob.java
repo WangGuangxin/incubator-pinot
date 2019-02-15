@@ -105,7 +105,7 @@ public class SegmentCreationJob extends BaseSegmentJob {
   @Override
   protected boolean isDataFile(String fileName) {
     return fileName.endsWith(".avro") || fileName.endsWith(".csv") || fileName.endsWith(".json") || fileName
-        .endsWith(".thrift");
+        .endsWith(".thrift") || fileName.endsWith(".parquet");
   }
 
   public void run()
