@@ -50,37 +50,10 @@ public class AvroRecordReader implements RecordReader {
     _schema = schema;
     _avroReader = AvroUtils.getAvroReader(dataFile);
     try {
-      validateSchema();
+      AvroUtils.validateSchema(_schema, _avroReader.getSchema());
     } catch (Exception e) {
       _avroReader.close();
       throw e;
-    }
-  }
-
-  private void validateSchema() {
-    org.apache.avro.Schema avroSchema = _avroReader.getSchema();
-    for (FieldSpec fieldSpec : _schema.getAllFieldSpecs()) {
-      String fieldName = fieldSpec.getName();
-      Field avroField = avroSchema.getField(fieldName);
-      if (avroField == null) {
-        LOGGER.warn("Pinot field: {} does not exist in Avro Schema", fieldName);
-      } else {
-        boolean isPinotFieldSingleValue = fieldSpec.isSingleValueField();
-        boolean isAvroFieldSingleValue = AvroUtils.isSingleValueField(avroField);
-        if (isPinotFieldSingleValue != isAvroFieldSingleValue) {
-          String errorMessage = "Pinot field: " + fieldName + " is " + (isPinotFieldSingleValue ? "Single" : "Multi")
-              + "-valued in Pinot schema but not in Avro schema";
-          LOGGER.error(errorMessage);
-          throw new IllegalStateException(errorMessage);
-        }
-
-        DataType pinotFieldDataType = fieldSpec.getDataType();
-        DataType avroFieldDataType = AvroUtils.extractFieldDataType(avroField);
-        if (pinotFieldDataType != avroFieldDataType) {
-          LOGGER.warn("Pinot field: {} of type: {} mismatches with corresponding field in Avro Schema of type: {}",
-              fieldName, pinotFieldDataType, avroFieldDataType);
-        }
-      }
     }
   }
 

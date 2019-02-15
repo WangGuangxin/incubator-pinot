@@ -48,6 +48,8 @@ public class RecordReaderFactory {
       case THRIFT:
         return new ThriftRecordReader(dataFile, schema,
             (ThriftRecordReaderConfig) segmentGeneratorConfig.getReaderConfig());
+      case PARQUET:
+        return new ParquetRecordReader(dataFile, schema);
       default:
         throw new UnsupportedOperationException("Unsupported input file format: " + fileFormat);
     }
