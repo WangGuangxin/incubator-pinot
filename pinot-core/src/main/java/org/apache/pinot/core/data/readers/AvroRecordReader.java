@@ -20,11 +20,8 @@ package org.apache.pinot.core.data.readers;
 
 import java.io.File;
 import java.io.IOException;
-import org.apache.avro.Schema.Field;
 import org.apache.avro.file.DataFileStream;
 import org.apache.avro.generic.GenericRecord;
-import org.apache.pinot.common.data.FieldSpec;
-import org.apache.pinot.common.data.FieldSpec.DataType;
 import org.apache.pinot.common.data.Schema;
 import org.apache.pinot.core.data.GenericRow;
 import org.apache.pinot.core.util.AvroUtils;
