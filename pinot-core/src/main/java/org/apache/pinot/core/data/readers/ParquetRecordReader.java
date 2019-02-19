@@ -28,52 +28,56 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
 
+
 /**
  * Record reader for Parquet file.
  */
 public class ParquetRecordReader implements RecordReader {
-    private final String _dataFilePath;
-    private final Schema _schema;
+  private final String _dataFilePath;
+  private final Schema _schema;
 
-    private Iterator<GenericRecord> _reader;
+  private Iterator<GenericRecord> _reader;
 
-    public ParquetRecordReader(File dataFile, Schema schema) throws IOException {
-        _dataFilePath = "file://" + dataFile.getAbsolutePath();
-        _schema = schema;
+  public ParquetRecordReader(File dataFile, Schema schema)
+      throws IOException {
+    _dataFilePath = "file://" + dataFile.getAbsolutePath();
+    _schema = schema;
+    _reader = ParquetUtils.getParquetReader(_dataFilePath);
+    AvroUtils.validateSchema(_schema, ParquetUtils.getParquetSchema(_dataFilePath));
+  }
 
-        _reader = ParquetUtils.getParquetReader(_dataFilePath);
-        AvroUtils.validateSchema(_schema, ParquetUtils.getParquetSchema(_dataFilePath));
-    }
+  @Override
+  public boolean hasNext() {
+    return _reader.hasNext();
+  }
 
+  @Override
+  public GenericRow next()
+      throws IOException {
+    return next(new GenericRow());
+  }
 
-    @Override
-    public boolean hasNext() {
-        return _reader.hasNext();
-    }
+  @Override
+  public GenericRow next(GenericRow reuse)
+      throws IOException {
+    GenericRecord next = _reader.next();
+    AvroUtils.fillGenericRow(next, reuse, _schema);
+    return reuse;
+  }
 
-    @Override
-    public GenericRow next() throws IOException {
-        return next(new GenericRow());
-    }
+  @Override
+  public void rewind()
+      throws IOException {
+    _reader = ParquetUtils.getParquetReader(_dataFilePath);
+  }
 
-    @Override
-    public GenericRow next(GenericRow reuse) throws IOException {
-        GenericRecord next = _reader.next();
-        AvroUtils.fillGenericRow(next, reuse, _schema);
-        return reuse;
-    }
+  @Override
+  public Schema getSchema() {
+    return _schema;
+  }
 
-    @Override
-    public void rewind() throws IOException {
-        _reader = ParquetUtils.getParquetReader(_dataFilePath);
-    }
-
-    @Override
-    public Schema getSchema() {
-        return _schema;
-    }
-
-    @Override
-    public void close() throws IOException {
-    }
+  @Override
+  public void close()
+      throws IOException {
+  }
 }

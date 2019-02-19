@@ -38,82 +38,81 @@ import java.util.List;
 import java.util.NoSuchElementException;
 
 public class ParquetUtils {
-    public static Iterator<GenericRecord> getParquetReader(String fileName) throws IOException {
-        Path dataFsPath = new Path(fileName);
+  public static Iterator<GenericRecord> getParquetReader(String fileName)
+      throws IOException {
+    Path dataFsPath = new Path(fileName);
+    Configuration conf = new Configuration();
+    ParquetReader<GenericRecord> parquet =
+        AvroParquetReader.<GenericRecord>builder(dataFsPath).disableCompatibility().withDataModel(GenericData.get())
+            .withConf(conf).build();
 
-        Configuration conf = new Configuration();
-        ParquetReader<GenericRecord> parquet = AvroParquetReader.<GenericRecord>builder(dataFsPath)
-                .disableCompatibility()
-                .withDataModel(GenericData.get())
-                .withConf(conf)
-                .build();
+    return new Iterator<GenericRecord>() {
+      private boolean hasNext = false;
+      private GenericRecord next = advance();
 
-        return new Iterator<GenericRecord> () {
-            private boolean hasNext = false;
-            private GenericRecord next = advance();
+      @Override
+      public boolean hasNext() {
+        return hasNext;
+      }
 
-            @Override
-            public boolean hasNext() {
-                return hasNext;
-            }
-
-            @Override
-            public GenericRecord next() {
-                if (!hasNext) {
-                    throw new NoSuchElementException();
-                }
-
-                GenericRecord toReturn = next;
-                next = advance();
-                return toReturn;
-            }
-
-            private GenericRecord advance() {
-                try {
-                    GenericRecord next = parquet.read();
-                    hasNext = (next != null);
-
-                    if (hasNext == false) {
-                        parquet.close();
-                    }
-
-                    return next;
-                } catch (IOException e) {
-                    throw new RuntimeException("Failed while reading parquet file: " + fileName, e);
-                }
-            }
-        };
-    }
-
-    public static Schema getParquetSchema(String fileName) throws IOException {
-        Path dataFsPath = new Path(fileName);
-        FileSystem fs = dataFsPath.getFileSystem(new Configuration());
-        ParquetMetadata footer = ParquetFileReader.readFooter(fs.getConf(), dataFsPath);
-
-        String schemaString = footer.getFileMetaData().getKeyValueMetaData().get("parquet.avro.schema");
-        if (schemaString == null) {
-            // try the older property
-            schemaString = footer.getFileMetaData().getKeyValueMetaData().get("avro.schema");
+      @Override
+      public GenericRecord next() {
+        if (!hasNext) {
+          throw new NoSuchElementException();
         }
 
-        if (schemaString != null) {
-            return new Schema.Parser().parse(schemaString);
-        } else {
-            return new AvroSchemaConverter().convert(footer.getFileMetaData().getSchema());
-        }
-    }
+        GenericRecord toReturn = next;
+        next = advance();
+        return toReturn;
+      }
 
-    public static void writeParquetRecord(String fileName, Schema schema, List<GenericRecord> records) throws IOException {
-        ParquetWriter<GenericRecord> writer = AvroParquetWriter.<GenericRecord>builder(new Path(fileName))
-                .withSchema(schema)
-                .build();
-
+      private GenericRecord advance() {
         try {
-            for(GenericRecord r : records) {
-                writer.write(r);
-            }
-        } finally {
-            writer.close();
+          GenericRecord next = parquet.read();
+          hasNext = (next != null);
+
+          if (hasNext == false) {
+            parquet.close();
+          }
+
+          return next;
+        } catch (IOException e) {
+          throw new RuntimeException("Failed while reading parquet file: " + fileName, e);
         }
+      }
+    };
+  }
+
+  public static Schema getParquetSchema(String fileName)
+      throws IOException {
+    Path dataFsPath = new Path(fileName);
+    FileSystem fs = dataFsPath.getFileSystem(new Configuration());
+    ParquetMetadata footer = ParquetFileReader.readFooter(fs.getConf(), dataFsPath);
+
+    String schemaString = footer.getFileMetaData().getKeyValueMetaData().get("parquet.avro.schema");
+    if (schemaString == null) {
+      // try the older property
+      schemaString = footer.getFileMetaData().getKeyValueMetaData().get("avro.schema");
     }
+
+    if (schemaString != null) {
+      return new Schema.Parser().parse(schemaString);
+    } else {
+      return new AvroSchemaConverter().convert(footer.getFileMetaData().getSchema());
+    }
+  }
+
+  public static void writeParquetRecord(String fileName, Schema schema, List<GenericRecord> records)
+      throws IOException {
+    ParquetWriter<GenericRecord> writer =
+        AvroParquetWriter.<GenericRecord>builder(new Path(fileName)).withSchema(schema).build();
+
+    try {
+      for (GenericRecord r : records) {
+        writer.write(r);
+      }
+    } finally {
+      writer.close();
+    }
+  }
 }

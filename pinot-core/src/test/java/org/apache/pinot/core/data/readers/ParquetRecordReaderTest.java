@@ -32,67 +32,58 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 public class ParquetRecordReaderTest extends RecordReaderTest {
-    private static final File TEMP_DIR = new File(FileUtils.getTempDirectory(), "ParquetRecordReaderTest");
-    private static final File DATA_FILE = new File(TEMP_DIR, "data.parquet");
-    private static final String DATA_FILE_PATH = "file://" + DATA_FILE.getAbsolutePath();
+  private static final File TEMP_DIR = new File(FileUtils.getTempDirectory(), "ParquetRecordReaderTest");
+  private static final File DATA_FILE = new File(TEMP_DIR, "data.parquet");
+  private static final String DATA_FILE_PATH = "file://" + DATA_FILE.getAbsolutePath();
 
-    @BeforeClass
-    public void setUp() throws Exception {
-        FileUtils.forceMkdir(TEMP_DIR);
+  @BeforeClass
+  public void setUp()
+      throws Exception {
+    FileUtils.forceMkdir(TEMP_DIR);
 
-        String strSchema = "{\n" +
-                "    \"name\": \"AvroParquetTest\",\n" +
-                "    \"type\": \"record\",\n" +
-                "    \"fields\": [\n" +
-                "        {\n" +
-                "            \"name\": \"INT_SV\",\n" +
-                "            \"type\": [ \"int\", \"null\"],\n" +
-                "            \"default\": 0 \n" +
-                "        },\n" +
-                "        {\n" +
-                "            \"name\": \"INT_MV\",\n" +
-                "            \"type\": [{\n" +
-                "                \"type\": \"array\",\n" +
-                "                \"items\": \"int\"\n" +
-                "             }, \"null\"]\n" +
-                "        }\n" +
-                "    ]\n" +
-                "}";
+    String strSchema =
+        "{\n" + "    \"name\": \"AvroParquetTest\",\n" + "    \"type\": \"record\",\n" + "    \"fields\": [\n"
+            + "        {\n" + "            \"name\": \"INT_SV\",\n" + "            \"type\": [ \"int\", \"null\"],\n"
+            + "            \"default\": 0 \n" + "        },\n" + "        {\n" + "            \"name\": \"INT_MV\",\n"
+            + "            \"type\": [{\n" + "                \"type\": \"array\",\n"
+            + "                \"items\": \"int\"\n" + "             }, \"null\"]\n" + "        }\n" + "    ]\n" + "}";
 
-        Schema schema = new Schema.Parser().parse(strSchema);
-        List<GenericRecord> records = new ArrayList<>();
+    Schema schema = new Schema.Parser().parse(strSchema);
+    List<GenericRecord> records = new ArrayList<>();
 
-        for (Object[] r : RECORDS) {
-            GenericRecord record = new GenericData.Record(schema);
-            if (r[0] != null) {
-                record.put("INT_SV", r[0]);
-            } else {
-                record.put("INT_SV", 0);
-            }
+    for (Object[] r : RECORDS) {
+      GenericRecord record = new GenericData.Record(schema);
+      if (r[0] != null) {
+        record.put("INT_SV", r[0]);
+      } else {
+        record.put("INT_SV", 0);
+      }
 
-            if (r[1] != null) {
-                record.put("INT_MV", r[1]);
-            } else {
-                record.put("INT_MV", new int[]{-1});
-            }
+      if (r[1] != null) {
+        record.put("INT_MV", r[1]);
+      } else {
+        record.put("INT_MV", new int[]{-1});
+      }
 
-            records.add(record);
-        }
-
-        ParquetUtils.writeParquetRecord(DATA_FILE_PATH, schema, records);
+      records.add(record);
     }
 
-    @Test
-    public void testParquetRecordReader() throws Exception {
-        try (ParquetRecordReader recordReader = new ParquetRecordReader(DATA_FILE, SCHEMA)) {
-            checkValue(recordReader);
-            recordReader.rewind();
-            checkValue(recordReader);
-        }
-    }
+    ParquetUtils.writeParquetRecord(DATA_FILE_PATH, schema, records);
+  }
 
-    @AfterClass
-    public void tearDown() throws Exception {
-         FileUtils.forceDelete(TEMP_DIR);
+  @Test
+  public void testParquetRecordReader()
+      throws Exception {
+    try (ParquetRecordReader recordReader = new ParquetRecordReader(DATA_FILE, SCHEMA)) {
+      checkValue(recordReader);
+      recordReader.rewind();
+      checkValue(recordReader);
     }
+  }
+
+  @AfterClass
+  public void tearDown()
+      throws Exception {
+    FileUtils.forceDelete(TEMP_DIR);
+  }
 }
