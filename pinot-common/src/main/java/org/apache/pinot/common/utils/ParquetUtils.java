@@ -37,7 +37,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+
 public class ParquetUtils {
+  /**
+   * Get the parquet record iterator for the given file
+   */
   public static Iterator<GenericRecord> getParquetReader(String fileName)
       throws IOException {
     Path dataFsPath = new Path(fileName);
@@ -83,6 +87,9 @@ public class ParquetUtils {
     };
   }
 
+  /**
+   * Get parquet schema for the given file
+   */
   public static Schema getParquetSchema(String fileName)
       throws IOException {
     Path dataFsPath = new Path(fileName);
@@ -102,6 +109,9 @@ public class ParquetUtils {
     }
   }
 
+  /**
+   * write records as parquet file
+   */
   public static void writeParquetRecord(String fileName, Schema schema, List<GenericRecord> records)
       throws IOException {
     ParquetWriter<GenericRecord> writer =
