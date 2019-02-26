@@ -19,6 +19,7 @@
 package org.apache.pinot.core.data.readers;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,6 +27,8 @@ import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.commons.io.FileUtils;
+import org.apache.parquet.avro.AvroParquetWriter;
+import org.apache.parquet.hadoop.ParquetWriter;
 import org.apache.pinot.common.utils.ParquetUtils;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -68,7 +71,14 @@ public class ParquetRecordReaderTest extends RecordReaderTest {
       records.add(record);
     }
 
-    ParquetUtils.writeParquetRecord(DATA_FILE_PATH, schema, records);
+    ParquetWriter<GenericRecord> writer = ParquetUtils.getParquetWriter(DATA_FILE_PATH, schema);
+    try {
+      for (GenericRecord r : records) {
+        writer.write(r);
+      }
+    } finally {
+      writer.close();
+    }
   }
 
   @Test

@@ -76,21 +76,17 @@ public class ParquetUtils {
   }
 
   /**
-   * write records as parquet file
+   * Get a ParquetWriter with the given file
+   * @param fileName
+   * @param schema
+   * @return a ParquetWriter
+   * @throws IOException
    */
-  public static void writeParquetRecord(String fileName, Schema schema, List<GenericRecord> records)
+  public static ParquetWriter<GenericRecord> getParquetWriter(String fileName, Schema schema)
       throws IOException {
-    ParquetWriter<GenericRecord> writer =
-        AvroParquetWriter.<GenericRecord>builder(new Path(fileName)).withSchema(schema).withConf(getConfiguration())
+    Path dataFsPath = new Path(fileName);
+    return AvroParquetWriter.<GenericRecord>builder(dataFsPath).withSchema(schema).withConf(getConfiguration())
             .build();
-
-    try {
-      for (GenericRecord r : records) {
-        writer.write(r);
-      }
-    } finally {
-      writer.close();
-    }
   }
 
   private static Configuration getConfiguration() {
